@@ -4,6 +4,11 @@
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+<!--    <meta-data-->
+<!--        android:name="com.google.android.gms.ads.APPLICATION_ID"-->
+<!--        android:value="ca-app-pub-5169531562006723~5810328137"/> &lt;!&ndash; TODO: must be change code &ndash;&gt;-->
 
     <application
         android:allowBackup="true"

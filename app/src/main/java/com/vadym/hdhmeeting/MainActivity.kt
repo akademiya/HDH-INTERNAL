@@ -4,8 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.ads.AdView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : BaseActivity() {
@@ -18,11 +20,7 @@ class MainActivity : BaseActivity() {
         val rvListLinks = findViewById<RecyclerView>(R.id.rv_list_links)
         db = SqliteDatabase.getInstance(this)
         val listLinks: List<ItemLinkEntity> = db.listLinks()
-
-//           val listLinks: List<ItemLinkEntity> = listOf(
-//            ItemLinkEntity("Central Europe", "https://us06web.zoom.us/j/94352399169", listOf("Monday"), "7:00"),
-//            ItemLinkEntity("Ukraine HDH", "https://us02web.zoom.us/j/89702900897", listOf("Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"), "6:00")
-//        )
+//        val adContainer: AdView = findViewById(R.id.adView)
 
         fab.setOnClickListener {
             startActivity(Intent(this, CreateItemActivity::class.java))
@@ -31,6 +29,13 @@ class MainActivity : BaseActivity() {
         adapter = ItemLinkAdapter(listLinks, db)
         rvListLinks.layoutManager = LinearLayoutManager(this)
         rvListLinks.adapter = adapter
+
+//        if (isNetworkAvailable(this)) {
+//            adContainer.visibility = View.VISIBLE
+//            Admob.initializeAdmob(this, adContainer)
+//        } else {
+//            adContainer.visibility = View.GONE
+//        }
 
     }
 
