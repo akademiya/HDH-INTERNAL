@@ -1,0 +1,9 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="item_card_container">135dp</dimen>
+
+    <dimen name="text_size_title">22sp</dimen>
+    <dimen name="text_size_simple">18sp</dimen>
+    <dimen name="toolbar_height">72dp</dimen>
+</resources>

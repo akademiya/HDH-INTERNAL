@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#fbb03b</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="toolbar">#fbb03b</color>
+
+    <color name="save_button">#FFBB86FC</color>
+
+    <color name="black_effective">#2a2a2a</color>
+    <color name="divider_color">#1E000000</color> <!--12% of black-->
+    <color name="text_title_dark">#DF000000</color> <!--87% of black-->
+    <color name="text_disabled_dark">#61000000</color> <!--38% of black-->
+    <color name="text_blue_color">#1976D2</color> <!--38% of black-->
+
+    <color name="text_day_color">#fbb03b</color>
+    <color name="text_time_color">#4CAF50</color>
+    <color name="red">#ED3636</color>
+
+    <color name="icon_pressed">#EEEEEE</color> <!--Gray 200-->
+</resources>

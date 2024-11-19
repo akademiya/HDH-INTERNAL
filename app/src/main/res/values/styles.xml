@@ -1,0 +1,68 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+<!--        <item name="android:windowActionBar" tools:ignore="NewApi">false</item>-->
+<!--        <item name="windowActionBar">false</item>-->
+    </style>
+
+    <!--Divider-->
+    <style name="AppTheme.HorizontalViewDivider" parent="AppTheme">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/divider_color</item>
+    </style>
+    <!--END Divider-->
+
+
+    <!--Text-->
+    <style name="TextStyle" parent="AppTheme">
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+        <item name="android:layout_marginLeft">2dp</item>
+        <item name="android:layout_marginRight">2dp</item>
+        <item name="android:fontFamily" tools:ignore="NewApi">sans-serif</item>
+        <item name="android:textColor">@color/black_effective</item>
+    </style>
+
+    <style name="TextStyle.Heading" parent="TextStyle">
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_title_dark</item>
+    </style>
+
+    <style name="TextStyle.Day" parent="TextStyle">
+        <item name="android:textSize">@dimen/text_size_simple</item>
+        <item name="android:textColor">@color/text_day_color</item>
+    </style>
+
+    <style name="TextStyle.Time" parent="TextStyle">
+        <item name="android:textSize">@dimen/text_size_simple</item>
+        <item name="android:textColor">@color/text_time_color</item>
+    </style>
+    <!--END Text-->
+
+
+    <!--Toolbar-->
+    <style name="Toolbar" parent="Base.ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/toolbar_height</item>
+        <item name="android:minHeight">?attr/actionBarSize</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:padding">0dp</item>
+    </style>
+
+    <style name="Toolbar.TitleText" parent="TextStyle.Heading">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+    <!--END Toolbar-->
+</resources>
