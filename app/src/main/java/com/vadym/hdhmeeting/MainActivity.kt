@@ -1,36 +1,43 @@
 package com.vadym.hdhmeeting
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.util.Collections
 
 class MainActivity : BaseActivity() {
     lateinit var db: SqliteDatabase
     private lateinit var adapter: ItemLinkAdapter
+    private lateinit var itemTouchHelper: ItemTouchHelper
+    private lateinit var listLinks: List<ItemLinkEntity>
 
     override fun init(savedInstanceState: Bundle?) {
         super.setContentView(R.layout.view_link_list)
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         val rvListLinks = findViewById<RecyclerView>(R.id.rv_list_links)
         db = SqliteDatabase.getInstance(this)
-        val listLinks: List<ItemLinkEntity> = db.listLinks()
+        listLinks = db.listLinks()
 
-//           val listLinks: List<ItemLinkEntity> = listOf(
-//            ItemLinkEntity("Central Europe", "https://us06web.zoom.us/j/94352399169", listOf("Monday"), "7:00"),
-//            ItemLinkEntity("Ukraine HDH", "https://us02web.zoom.us/j/89702900897", listOf("Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"), "6:00")
-//        )
 
         fab.setOnClickListener {
             startActivity(Intent(this, CreateItemActivity::class.java))
         }
 
-        adapter = ItemLinkAdapter(listLinks, db)
+        adapter = ItemLinkAdapter(listLinks, db, { viewHolder -> onStartDrag(viewHolder) })
         rvListLinks.layoutManager = LinearLayoutManager(this)
         rvListLinks.adapter = adapter
+
+        itemTouchHelper = ItemTouchHelper(touchHelperCallback()).apply {
+            attachToRecyclerView(rvListLinks)
+        }
 
     }
 
@@ -46,6 +53,53 @@ class MainActivity : BaseActivity() {
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {
+        itemTouchHelper.startDrag(viewHolder)
+    }
+
+    private fun touchHelperCallback() = object : ItemTouchHelper.Callback() {
+        override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+            val dragFlags: Int = ItemTouchHelper.UP.or(ItemTouchHelper.DOWN)
+            val swipeFlags: Int = ItemTouchHelper.ACTION_STATE_DRAG
+            return makeMovementFlags(dragFlags, swipeFlags)
+        }
+
+        override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+            adapter.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
+            drop(viewHolder.adapterPosition, target.adapterPosition)
+            return true
+        }
+
+        override fun isLongPressDragEnabled(): Boolean {
+            return false
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            listLinks.forEachIndexed { index, current ->
+                db.deleteLink(current.linkID)
+                current.position = index
+                db.updateSortPosition(current)
+            }
+        }
+    }
+
+    fun drop(from: Int, to: Int) {
+        if (from < to) {
+            for (i in from until to) {
+                Collections.swap(listLinks, i, i + 1)
+            }
+        } else {
+            for (i in from downTo to + 1) {
+                Collections.swap(listLinks, i, i - 1)
+            }
+        }
+
+        listLinks.forEachIndexed { index, current ->
+            current.position = index
+            db.updateSortPosition(current)
         }
     }
 

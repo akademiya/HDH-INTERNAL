@@ -8,11 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +20,8 @@ import java.util.Calendar
 
 class ItemLinkAdapter (
     private val itemLinkList: List<ItemLinkEntity>,
-    private val database: SqliteDatabase
+    private val database: SqliteDatabase,
+    private val onMoveItemTouch: (viewHolder: VH) -> Unit
 ) : RecyclerView.Adapter<ItemLinkAdapter.VH>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(
@@ -31,6 +32,7 @@ class ItemLinkAdapter (
         return itemLinkList.size
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: VH, position: Int) {
         holder.apply {
             val currentItem = itemLinkList[position]
@@ -50,6 +52,13 @@ class ItemLinkAdapter (
                 true
             }
 
+            ivMoveItem?.setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    onMoveItemTouch(holder)
+                }
+                return@setOnTouchListener false
+            }
+
             goBack.setOnClickListener {
                 editItemFrame.visibility = View.GONE
             }
@@ -59,46 +68,54 @@ class ItemLinkAdapter (
                 (itemView.context as Activity).recreate()
             }
 
-            editItem.setOnClickListener {  }
-
-        }
-    }
-
-    @SuppressLint("ScheduleExactAlarm")
-    private fun scheduleLinkOpening(context: Context, item: ItemLinkEntity) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, OpenUrlReceiver::class.java).apply {
-            putExtra("url", item.linkUrl)
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            item.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        item.days?.forEach { day ->
-            val calendar = Calendar.getInstance().apply {
-                val currentDay = get(Calendar.DAY_OF_WEEK)
-                val targetDay = getDayOfWeekFromString(day)
-                val daysUntilTarget = (targetDay - currentDay + 7) % 7
-                add(Calendar.DAY_OF_YEAR, daysUntilTarget)
-
-                val (hour, minute) = item.time?.split(":")?.map { it.toInt() } ?: listOf(0, 0)
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
+            editItem.setOnClickListener {
+                itemView.context.startActivity(Intent(itemView.context, CreateItemActivity::class.java).apply {
+                    putExtra("editItem", currentItem)
+                })
             }
 
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
         }
     }
 
-    private fun getDayOfWeekFromString(day: String): Int {
+
+    @SuppressLint("UnspecifiedImmutableFlag")
+    private fun scheduleLinkOpening(context: Context, item: ItemLinkEntity) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        item.days?.forEach { day ->
+            val dayOfWeek = getDayOfWeek(day)
+            val calendar = Calendar.getInstance().apply {
+                set(Calendar.DAY_OF_WEEK, dayOfWeek)
+                val timeParts = item.time?.split(":")
+                if (timeParts != null && timeParts.size == 2) {
+                    set(Calendar.HOUR_OF_DAY, timeParts[0].toInt())
+                    set(Calendar.MINUTE, timeParts[1].toInt())
+                } else {
+                    set(Calendar.HOUR_OF_DAY, 6) // Default to 06:00
+                    set(Calendar.MINUTE, 0)
+                }
+                set(Calendar.SECOND, 0)
+                if (before(Calendar.getInstance())) {
+                    add(Calendar.WEEK_OF_YEAR, 1)
+                }
+            }
+
+            val intent = Intent(context, NotificationReceiver::class.java).apply {
+                putExtra("linkItem", item)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                item.linkID + dayOfWeek, // Unique requestCode for each alarm
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        }
+    }
+
+
+    private fun getDayOfWeek(day: String): Int {
         return when (day.lowercase()) {
             "sunday" -> Calendar.SUNDAY
             "monday" -> Calendar.MONDAY
@@ -110,6 +127,7 @@ class ItemLinkAdapter (
             else -> throw IllegalArgumentException("Invalid day: $day")
         }
     }
+
 
     private fun openUrlByHandle(context: Context, url: String) {
         try {
@@ -131,6 +149,7 @@ class ItemLinkAdapter (
         val editItem = view.findViewById<ImageView>(R.id.edit_item)
         val editItemFrame = view.findViewById<FrameLayout>(R.id.edit_card_frame)
         val goBack = view.findViewById<ImageView>(R.id.go_back)
+        val ivMoveItem = view.findViewById<ImageView>(R.id.iv_move_item)
 
     }
 }

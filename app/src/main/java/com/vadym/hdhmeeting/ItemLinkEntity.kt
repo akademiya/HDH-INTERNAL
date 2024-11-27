@@ -1,6 +1,8 @@
 package com.vadym.hdhmeeting
 
-class ItemLinkEntity {
+import java.io.Serializable
+
+class ItemLinkEntity : Serializable {
     var linkID: Int = 0
     var linkTitle: String? = null
     var linkUrl: String? = null

@@ -5,22 +5,32 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.TimePicker
 import android.widget.Toast
 
 class CreateItemActivity: BaseActivity() {
-    lateinit var db: SqliteDatabase
-    lateinit var listLinks: List<ItemLinkEntity>
+    private lateinit var db: SqliteDatabase
+    private lateinit var listLinks: List<ItemLinkEntity>
+    private lateinit var customLinkTitle: EditText
+    private lateinit var customLink: EditText
+    private var isEditItem: Boolean = false
 
     override fun init(savedInstanceState: Bundle?) {
         super.setContentView(R.layout.item_link_create)
         val onSaveButtonClick = findViewById<Button>(R.id.saveButton)
-        val customLinkTitle = findViewById<EditText>(R.id.customLinkTitle)
-        val customLink = findViewById<EditText>(R.id.customLink)
+        customLinkTitle = findViewById(R.id.customLinkTitle)
+        customLink = findViewById(R.id.customLink)
         val timePicker = findViewById<TimePicker>(R.id.time_picker)
         timePicker.setIs24HourView(true)
         db = SqliteDatabase.getInstance(this)
         listLinks = db.listLinks()
+
+        val editItem = intent?.getSerializableExtra("editItem") as? ItemLinkEntity
+        editItem?.let {
+            editItem(it)
+            isEditItem = true
+        }
 
         val daysCheckBoxes = listOf<CheckBox>(
             findViewById(R.id.sunday),
@@ -42,16 +52,57 @@ class CreateItemActivity: BaseActivity() {
                     days = getSelectedDays(daysCheckBoxes),
                     time = saveSelectedTime(timePicker)
                 )
-                db.addLink(
-                    ItemLinkEntity(
+                if (!isEditItem) {
+                    db.addLink(
+                        ItemLinkEntity(
+                            linkTitle = customLinkTitle.text.toString(),
+                            linkUrl = customLink.text.toString(),
+                            days = getSelectedDays(daysCheckBoxes),
+                            time = saveSelectedTime(timePicker),
+                            position = listLinks.lastIndex + 1
+                        )
+                    )
+                } else {
+                    db.updateLink(ItemLinkEntity(
+                        linkID = editItem!!.linkID,
                         linkTitle = customLinkTitle.text.toString(),
                         linkUrl = customLink.text.toString(),
                         days = getSelectedDays(daysCheckBoxes),
                         time = saveSelectedTime(timePicker),
-                        position = listLinks.lastIndex + 1
-                    )
-                )
+                        position = editItem.position
+                    ))
+                }
                 startActivity(Intent(this, MainActivity::class.java))
+            }
+        }
+
+    }
+
+    private fun editItem(item: ItemLinkEntity) {
+        val days: List<String>? = item.days
+
+        customLinkTitle.setText(item.linkTitle, TextView.BufferType.EDITABLE)
+        customLink.setText(item.linkUrl, TextView.BufferType.EDITABLE)
+
+        val daysCheckBoxes = listOf<CheckBox>(
+            findViewById(R.id.sunday),
+            findViewById(R.id.monday),
+            findViewById(R.id.tuesday),
+            findViewById(R.id.wednesday),
+            findViewById(R.id.thursday),
+            findViewById(R.id.friday),
+            findViewById(R.id.saturday)
+        )
+
+        days?.forEach { day ->
+            when (day) {
+                DayOfWeek.SUNDAY.day -> daysCheckBoxes[0].isChecked = true
+                DayOfWeek.MONDAY.day -> daysCheckBoxes[1].isChecked = true
+                DayOfWeek.TUESDAY.day -> daysCheckBoxes[2].isChecked = true
+                DayOfWeek.WEDNESDAY.day -> daysCheckBoxes[3].isChecked = true
+                DayOfWeek.THURSDAY.day -> daysCheckBoxes[4].isChecked = true
+                DayOfWeek.FRIDAY.day -> daysCheckBoxes[5].isChecked = true
+                DayOfWeek.SATURDAY.day -> daysCheckBoxes[6].isChecked = true
             }
         }
 
@@ -126,7 +177,7 @@ class CreateItemActivity: BaseActivity() {
     enum class Error(val textError: String) {
         EMPTY_TITLE("Enter the Title of link"),
         EMPTY_URL("Enter the valid URL"),
-        EMPTY_DAY("Select min one day, when this link must be open"),
+        EMPTY_DAY("Select minimum one day, when this link must be open"),
         EMPTY_TIME("Set the time")
     }
 }
