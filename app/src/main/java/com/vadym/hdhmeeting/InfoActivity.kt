@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
@@ -27,6 +28,9 @@ class InfoActivity: BaseActivity() {
         site.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(resources.getString(R.string.site_link))))
         }
+
+        val googlePlay = findViewById<TextView>(R.id.text_info)
+        googlePlay.movementMethod = LinkMovementMethod.getInstance()
 
         notificationSwitch.isChecked = sharedPreferences.getBoolean("notificationSwitchState", false)
         soundMessageSwitch.isChecked = sharedPreferences.getBoolean("soundSwitchState", false)
