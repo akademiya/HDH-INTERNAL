@@ -9,7 +9,7 @@ class OpenUrlService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val url = intent?.getStringExtra("url")
         if (url != null) {
-            MediaPlayer.create(this, R.raw.beep_alarm).apply {
+            MediaPlayer.create(this, R.raw.beep_alarm6).apply {
                 start()
                 setOnCompletionListener { release() }
             }

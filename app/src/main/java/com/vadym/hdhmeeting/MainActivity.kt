@@ -1,12 +1,10 @@
 package com.vadym.hdhmeeting
 
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
+import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,20 +16,22 @@ class MainActivity : BaseActivity() {
     private lateinit var adapter: ItemLinkAdapter
     private lateinit var itemTouchHelper: ItemTouchHelper
     private lateinit var listLinks: List<ItemLinkEntity>
+    private lateinit var fab: FloatingActionButton
+    private lateinit var rvListLinks: RecyclerView
 
     override fun init(savedInstanceState: Bundle?) {
         super.setContentView(R.layout.view_link_list)
-        val fab = findViewById<FloatingActionButton>(R.id.fab)
-        val rvListLinks = findViewById<RecyclerView>(R.id.rv_list_links)
+        fab = findViewById(R.id.fab)
+        rvListLinks = findViewById(R.id.rv_list_links)
         db = SqliteDatabase.getInstance(this)
         listLinks = db.listLinks()
 
-
+        showOrHideFab()
         fab.setOnClickListener {
             startActivity(Intent(this, CreateItemActivity::class.java))
         }
 
-        adapter = ItemLinkAdapter(listLinks, db, { viewHolder -> onStartDrag(viewHolder) })
+        adapter = ItemLinkAdapter(listLinks, db) { viewHolder -> onStartDrag(viewHolder) }
         rvListLinks.layoutManager = LinearLayoutManager(this)
         rvListLinks.adapter = adapter
 
@@ -101,6 +101,19 @@ class MainActivity : BaseActivity() {
             current.position = index
             db.updateSortPosition(current)
         }
+    }
+
+    private fun showOrHideFab() {
+        rvListLinks.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (dy > 0 && fab.visibility == View.VISIBLE) {
+                    fab.hide()
+                } else if (dy < 0 && fab.visibility != View.VISIBLE) {
+                    fab.show()
+                }
+            }
+        })
     }
 
 }

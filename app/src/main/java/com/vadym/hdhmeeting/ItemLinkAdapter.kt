@@ -5,7 +5,9 @@ import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -13,8 +15,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import java.util.Calendar
 
@@ -23,6 +27,7 @@ class ItemLinkAdapter (
     private val database: SqliteDatabase,
     private val onMoveItemTouch: (viewHolder: VH) -> Unit
 ) : RecyclerView.Adapter<ItemLinkAdapter.VH>() {
+//    private var isEdited = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(
         LayoutInflater.from(parent.context).inflate(R.layout.item_link_card, parent, false)
@@ -35,13 +40,41 @@ class ItemLinkAdapter (
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: VH, position: Int) {
         holder.apply {
+            val sharedPreferences = itemView.context.getSharedPreferences("AppPreferences", MODE_PRIVATE)
+            val editedSharedPref = itemView.context.getSharedPreferences("Edit", MODE_PRIVATE)
+            val isNotification = sharedPreferences.getBoolean("notificationSwitchState", false)
+            var isEdited = editedSharedPref.getBoolean("isEdited", false)
             val currentItem = itemLinkList[position]
             currLinkTitle.text = currentItem.linkTitle
             currDays.text = if (currentItem.days!!.size > 1) currentItem.days?.joinToString(", ") else currentItem.days?.joinToString("")
             currTime.text = currentItem.time ?: "06:00"
+            linkNotification.isChecked = currentItem.notification == true
 
-            scheduleLinkOpening(itemView.context, currentItem)
+            if (isEdited && isNotification && linkNotification.isChecked) {
+                scheduleLinkOpening(itemView.context, currentItem)
+                isEdited = false
+            }
 
+            linkNotification.setOnCheckedChangeListener { _, isChecked ->
+                currentItem.notification = isChecked
+                database.updateNotificationStatus(currentItem.linkID, isChecked)
+
+                if (isNotification) {
+                    if (isChecked) {
+                        scheduleLinkOpening(itemView.context, currentItem)
+                    } else {
+                        cancelScheduledNotification(itemView.context, currentItem)
+                    }
+                }
+
+            }
+
+
+//            if (isNotification) {
+//                if (currentItem.notification) {
+//                    scheduleLinkOpening(itemView.context, currentItem)
+//                }
+//            }
 
             itemView.setOnClickListener {
                 openUrlByHandle(it.context, currentItem.linkUrl.toString())
@@ -49,6 +82,7 @@ class ItemLinkAdapter (
 
             itemView.setOnLongClickListener {
                 editItemFrame.visibility = View.VISIBLE
+                isEdited = true
                 true
             }
 
@@ -77,8 +111,25 @@ class ItemLinkAdapter (
         }
     }
 
+    private fun cancelScheduledNotification(context: Context, item: ItemLinkEntity) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    @SuppressLint("UnspecifiedImmutableFlag")
+        item.days?.forEach { day ->
+            val dayOfWeek = getDayOfWeek(day)
+            val intent = Intent(context, NotificationReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                item.linkID + dayOfWeek, // Unique requestCode
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+        }
+    }
+
+
+
+    @SuppressLint("UnspecifiedImmutableFlag", "ScheduleExactAlarm")
     private fun scheduleLinkOpening(context: Context, item: ItemLinkEntity) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -144,6 +195,7 @@ class ItemLinkAdapter (
         val currLinkTitle = view.findViewById<TextView>(R.id.titleOfItem)
         val currDays = view.findViewById<TextView>(R.id.days)
         val currTime = view.findViewById<TextView>(R.id.time)
+        val linkNotification = view.findViewById<SwitchCompat>(R.id.link_notification)
 
         val deleteItem = view.findViewById<ImageView>(R.id.delete_item)
         val editItem = view.findViewById<ImageView>(R.id.edit_item)

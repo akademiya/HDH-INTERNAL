@@ -1,6 +1,7 @@
 package com.vadym.hdhmeeting
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.CheckBox
@@ -15,10 +16,12 @@ class CreateItemActivity: BaseActivity() {
     private lateinit var customLinkTitle: EditText
     private lateinit var customLink: EditText
     private var isEditItem: Boolean = false
+    private lateinit var editedSharedPref: SharedPreferences
 
     override fun init(savedInstanceState: Bundle?) {
         super.setContentView(R.layout.item_link_create)
         val onSaveButtonClick = findViewById<Button>(R.id.saveButton)
+        editedSharedPref = getSharedPreferences("Edit", MODE_PRIVATE)
         customLinkTitle = findViewById(R.id.customLinkTitle)
         customLink = findViewById(R.id.customLink)
         val timePicker = findViewById<TimePicker>(R.id.time_picker)
@@ -59,6 +62,7 @@ class CreateItemActivity: BaseActivity() {
                             linkUrl = customLink.text.toString(),
                             days = getSelectedDays(daysCheckBoxes),
                             time = saveSelectedTime(timePicker),
+                            notification = false,
                             position = listLinks.lastIndex + 1
                         )
                     )
@@ -69,8 +73,10 @@ class CreateItemActivity: BaseActivity() {
                         linkUrl = customLink.text.toString(),
                         days = getSelectedDays(daysCheckBoxes),
                         time = saveSelectedTime(timePicker),
+                        notification = editItem.notification,
                         position = editItem.position
                     ))
+                    editedSharedPref.edit().putBoolean("isEdited", isEditItem).apply()
                 }
                 startActivity(Intent(this, MainActivity::class.java))
             }

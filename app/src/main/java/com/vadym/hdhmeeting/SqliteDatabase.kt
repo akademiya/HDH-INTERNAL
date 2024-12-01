@@ -8,7 +8,7 @@ import java.util.ArrayList
 
 class SqliteDatabase private constructor(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     override fun onCreate(db: SQLiteDatabase?) {
-        val CREATE_PERSON_TABLE = ("CREATE TABLE $TABLE_LINKS($KEY_ID INTEGER PRIMARY KEY,$KEY_LINK_TITLE TEXT,$KEY_LINK_URL TEXT,$KEY_LIST_DAYS TEXT,$KEY_TIME TEXT,$KEY_POSITION INTEGER)")
+        val CREATE_PERSON_TABLE = ("CREATE TABLE $TABLE_LINKS($KEY_ID INTEGER PRIMARY KEY,$KEY_LINK_TITLE TEXT,$KEY_LINK_URL TEXT,$KEY_LIST_DAYS TEXT,$KEY_TIME TEXT,$KEY_NOTIFICATION INTEGER,$KEY_POSITION INTEGER)")
         db?.execSQL(CREATE_PERSON_TABLE)
     }
 
@@ -22,6 +22,7 @@ class SqliteDatabase private constructor(context: Context) : SQLiteOpenHelper(co
         values.put(KEY_LINK_URL, link.linkUrl)
         values.put(KEY_LIST_DAYS, link.days!!.joinToString(","))
         values.put(KEY_TIME, link.time)
+        values.put(KEY_NOTIFICATION, if (link.notification == true) 1 else 0)
         values.put(KEY_POSITION, link.position)
         val db = this.writableDatabase
 
@@ -41,12 +42,14 @@ class SqliteDatabase private constructor(context: Context) : SQLiteOpenHelper(co
                 val url = cursor.getString(2)
                 val days = cursor.getString(3)?.split(",") ?: emptyList()
                 val time = cursor.getString(4)
-                val position = Integer.parseInt(cursor.getString(5))
-                storePersons.add(ItemLinkEntity(id, title, url, days, time, position))
+                val notification = cursor.getInt(5) == 1
+                val position = Integer.parseInt(cursor.getString(6))
+                storePersons.add(ItemLinkEntity(id, title, url, days, time, notification, position))
 
             } while (cursor.moveToNext())
         }
         cursor.close()
+        db.close()
         return storePersons.sortedBy { it.position }
     }
 
@@ -56,23 +59,40 @@ class SqliteDatabase private constructor(context: Context) : SQLiteOpenHelper(co
         values.put(KEY_LINK_URL, link.linkUrl)
         values.put(KEY_LIST_DAYS, link.days!!.joinToString(","))
         values.put(KEY_TIME, link.time)
+        values.put(KEY_NOTIFICATION, link.notification)
+        values.put(KEY_POSITION, link.position)
         val db = this.readableDatabase
         db.update(TABLE_LINKS, values, "$KEY_ID=?", arrayOf(link.linkID.toString()))
+        db.close()
     }
+
+    fun updateNotificationStatus(linkID: Int, isEnabled: Boolean) {
+        val db = writableDatabase
+        val values = ContentValues()
+        val columns = arrayOf(KEY_ID, KEY_LINK_TITLE, KEY_LINK_URL, KEY_LIST_DAYS, KEY_TIME, KEY_NOTIFICATION, KEY_POSITION)
+
+        values.put(KEY_NOTIFICATION, if (isEnabled) 1 else 0)
+        db.query(TABLE_LINKS, columns, null, null, null, null, KEY_NOTIFICATION).close()
+        db.update(TABLE_LINKS, values, "$KEY_ID=?", arrayOf(linkID.toString()))
+        db.close()
+    }
+
 
     fun updateSortPosition(link: ItemLinkEntity) {
         val db = this.readableDatabase
         val values = ContentValues()
-        val columns = arrayOf(KEY_ID, KEY_LINK_TITLE, KEY_LINK_URL, KEY_LIST_DAYS, KEY_TIME, KEY_POSITION)
+        val columns = arrayOf(KEY_ID, KEY_LINK_TITLE, KEY_LINK_URL, KEY_LIST_DAYS, KEY_TIME, KEY_NOTIFICATION, KEY_POSITION)
 
         values.put(KEY_POSITION, link.position)
         db.query(TABLE_LINKS, columns, null, null, null, null, KEY_POSITION).close()
         db.update(TABLE_LINKS, values, "$KEY_ID=?", arrayOf(link.linkID.toString()))
+        db.close()
     }
 
     fun deleteLink(id: Int) {
         val db = this.writableDatabase
         db.delete(TABLE_LINKS, "$KEY_ID =?", arrayOf(id.toString()))
+        db.close()
     }
 
     companion object {
@@ -85,6 +105,7 @@ class SqliteDatabase private constructor(context: Context) : SQLiteOpenHelper(co
         val KEY_LINK_URL = "linkurl"
         val KEY_LIST_DAYS = "days"
         val KEY_TIME = "time"
+        val KEY_NOTIFICATION = "notification"
         val KEY_POSITION = "position"
 
         private var instance: SqliteDatabase? = null

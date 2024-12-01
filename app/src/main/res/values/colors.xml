@@ -19,6 +19,7 @@
     <color name="text_day_color">#fbb03b</color>
     <color name="text_time_color">#4CAF50</color>
     <color name="red">#ED3636</color>
+    <color name="fab_color">#fbb03b</color>
 
     <color name="icon_pressed">#EEEEEE</color> <!--Gray 200-->
 </resources>

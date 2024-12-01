@@ -18,6 +18,27 @@
         <!--        app:adSize="BANNER"-->
         <!--        app:adUnitId="ca-app-pub-5169531562006723/6198698608" />-->
 
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/notification_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Global Notification"
+            android:textSize="22sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/sound_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Sound message"
+            android:textSize="22sp" />
+
+        <View
+            style="@style/AppTheme.HorizontalViewDivider"
+            android:layout_marginBottom="16dp" />
+
         <TextView
             android:id="@+id/version"
             android:layout_width="wrap_content"
