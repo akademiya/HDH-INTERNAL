@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -15,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
@@ -27,7 +25,6 @@ class ItemLinkAdapter (
     private val database: SqliteDatabase,
     private val onMoveItemTouch: (viewHolder: VH) -> Unit
 ) : RecyclerView.Adapter<ItemLinkAdapter.VH>() {
-//    private var isEdited = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(
         LayoutInflater.from(parent.context).inflate(R.layout.item_link_card, parent, false)
@@ -69,12 +66,6 @@ class ItemLinkAdapter (
 
             }
 
-
-//            if (isNotification) {
-//                if (currentItem.notification) {
-//                    scheduleLinkOpening(itemView.context, currentItem)
-//                }
-//            }
 
             itemView.setOnClickListener {
                 openUrlByHandle(it.context, currentItem.linkUrl.toString())
@@ -131,6 +122,10 @@ class ItemLinkAdapter (
 
     @SuppressLint("UnspecifiedImmutableFlag", "ScheduleExactAlarm")
     private fun scheduleLinkOpening(context: Context, item: ItemLinkEntity) {
+        if (!AlarmPermissionUtil.canScheduleExactAlarms(context)) {
+            AlarmPermissionUtil.requestExactAlarmPermission(context)
+            return
+        }
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         item.days?.forEach { day ->

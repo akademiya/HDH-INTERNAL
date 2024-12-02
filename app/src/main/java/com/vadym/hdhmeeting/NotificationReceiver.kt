@@ -1,23 +1,24 @@
 package com.vadym.hdhmeeting
 
-import OpenUrlService
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
-import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 
 class NotificationReceiver : BroadcastReceiver() {
     private lateinit var sharedPreferences: SharedPreferences
@@ -32,72 +33,20 @@ class NotificationReceiver : BroadcastReceiver() {
             verifyAndHandleLink(context.applicationContext, it, soundSwitchState)
         }
 
-//        if (item != null) {
-//            context.startActivity(
-//                Intent(Intent.ACTION_VIEW, Uri.parse(item.linkUrl)).apply {
-//                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                }
-//            )
+//        val serviceIntent = Intent(context, OpenUrlService::class.java).apply {
+//            putExtra("url", item?.linkUrl)
 //        }
-
-        val serviceIntent = Intent(context, OpenUrlService::class.java).apply {
-            putExtra("url", item?.linkUrl)
-        }
-        context.startForegroundService(serviceIntent)
-//        context.startService(serviceIntent)
-
-
-//        val url = intent?.getStringExtra("url")
-//        val title = intent?.getStringExtra("title")
-//
-//        val notificationIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item?.linkUrl))
-//        val pendingIntent = PendingIntent.getActivity(
-//            context,
-//            0,
-//            notificationIntent,
-//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//        )
-//
-//        val notification = NotificationCompat.Builder(context, "LINK_NOTIFICATION_CHANNEL")
-//            .setContentTitle(item?.linkTitle ?: "Open Link")
-//            .setContentText("Tap to open: $url")
-//            .setSmallIcon(R.drawable.hdh)
-//            .setContentIntent(pendingIntent)
-//            .setAutoCancel(true)
-//            .build()
-//
-//        val notificationManager =
-//            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//
-//        // Create the notification channel if on API 26+
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            val channel = NotificationChannel(
-//                "LINK_NOTIFICATION_CHANNEL",
-//                "Link Notifications",
-//                NotificationManager.IMPORTANCE_HIGH
-//            ).apply {
-//                description = "Notifications for scheduled links"
-//            }
-//            notificationManager.createNotificationChannel(channel)
-//        }
-//        val mediaPlayer = MediaPlayer.create(context, R.raw.beep_alarm)
-//
-//        notificationManager.notify(item?.linkID ?: System.currentTimeMillis().toInt(), notification)
-//        mediaPlayer.start()
-//        mediaPlayer.setOnCompletionListener { it.release() }
-
-
+//        context.startForegroundService(serviceIntent)
     }
 
-//    @SuppressLint("UnspecifiedImmutableFlag", "ObsoleteSdkInt")
 private fun verifyAndHandleLink(context: Context, item: ItemLinkEntity, isSoundMessage: Boolean) {
-//        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-//        val isScreenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-//            powerManager.isInteractive
-//        } else {
-//            @Suppress("DEPRECATION")
-//            powerManager.isScreenOn
-//        }
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val isScreenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            powerManager.isInteractive
+        } else {
+            @Suppress("DEPRECATION")
+            powerManager.isScreenOn
+        }
 
 //        val wakeLock = powerManager.newWakeLock(
 //            PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE, // or PowerManager.ACQUIRE_CAUSES_WAKEUP
@@ -106,20 +55,22 @@ private fun verifyAndHandleLink(context: Context, item: ItemLinkEntity, isSoundM
 //        wakeLock.acquire(3000)
 
 
-        acquireWakeLock(context).use {
-            sendNotification(context, item, isSoundMessage)
-//            openLinkInBrowser(context.applicationContext, item.linkUrl)
-        }
-
-
-//        if (!isScreenOn) {
-//            context.applicationContext.startService(Intent(context, OpenUrlService::class.java).apply {
-//                putExtra("url", item.linkUrl)
-//            })
-////            openUrlByHandle(context, item.linkUrl.toString())
-//        } else {
-//            sendNotification(context, item)
+//        acquireWakeLock(context).use {
+//            sendNotification(context, item, isSoundMessage)
 //        }
+
+
+        if (isScreenOn) {
+            val serviceIntent = Intent(context, OpenUrlService::class.java).apply {
+                putExtra("url", item.linkUrl)
+            }
+            context.startForegroundService(serviceIntent)
+        } else {
+            acquireWakeLock(context).use {
+                sendNotification(context, item, isSoundMessage)
+//            openLinkInBrowser(context.applicationContext, item.linkUrl)
+            }
+        }
 //        wakeLock.release()
     }
 
@@ -140,31 +91,21 @@ private fun verifyAndHandleLink(context: Context, item: ItemLinkEntity, isSoundM
         ).apply { acquire(3000) }
     }
 
-    private fun openLinkInBrowser(context: Context, url: String?) {
-        try {
-            url?.let {
-                Log.d("NotificationReceiver", "Opening URL: $it")
-                context.startActivity(
-                    Intent(Intent.ACTION_VIEW, Uri.parse(it)).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                )
-            }
-        } catch (e: ActivityNotFoundException) {
-            Log.e("NotificationReceiver", "No activity found to handle the intent for URL: $url", e)
-        }
-
-    }
-
-//    private fun openUrlByHandle(context: Context, url: String) {
+//    private fun openLinkInBrowser(context: Context, url: String?) {
 //        try {
-//            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-//                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//            })
-//        } catch (e: Exception) {
-//            Toast.makeText(context, e.toString(), Toast.LENGTH_LONG).show()
+//            url?.let {
+//                context.startActivity(
+//                    Intent(Intent.ACTION_VIEW, Uri.parse(it)).apply {
+//                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                    }
+//                )
+//            }
+//        } catch (e: ActivityNotFoundException) {
+//            Log.e(context, "Something wrong with URL: $url", Toast.LENGTH_LONG)
 //        }
+//
 //    }
+
 
 
     @SuppressLint("ObsoleteSdkInt")
@@ -200,13 +141,19 @@ private fun verifyAndHandleLink(context: Context, item: ItemLinkEntity, isSoundM
             notificationManager.createNotificationChannel(channel)
         }
 
-//       ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-
-
-        with(NotificationManagerCompat.from(context)) {
-            notify(item.linkID, notification)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            with(NotificationManagerCompat.from(context)) {
+                notify(item.linkID, notification)
+            }
+        } else {
+            Toast.makeText(context, "Notifications are disabled due to missing permission", Toast.LENGTH_LONG).show()
         }
-//        notificationManager.notify(item.linkID, notification)
+
+//        with(NotificationManagerCompat.from(context)) {
+//            notify(item.linkID, notification)
+//        }
+
         if (isSoundMessage) {
             MediaPlayer.create(context, R.raw.beep_alarm3).apply {
                 start()

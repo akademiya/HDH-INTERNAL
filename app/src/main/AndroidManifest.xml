@@ -39,8 +39,8 @@
 
         <receiver android:name=".NotificationReceiver" />
 
-        <service android:name="OpenUrlService"
-            android:exported="false"/>
+        <service android:name=".OpenUrlService"
+            tools:ignore="MissingClass" />
 
     </application>
 
