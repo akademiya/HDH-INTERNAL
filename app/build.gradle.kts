@@ -12,8 +12,8 @@ android {
         applicationId = "com.vadym.hdhmeeting"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.04"
+        versionCode = 4
+        versionName = "1.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
