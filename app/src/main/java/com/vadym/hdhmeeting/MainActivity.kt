@@ -1,6 +1,7 @@
 package com.vadym.hdhmeeting
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -17,11 +18,13 @@ class MainActivity : BaseActivity() {
     private lateinit var itemTouchHelper: ItemTouchHelper
     private lateinit var listLinks: List<ItemLinkEntity>
     private lateinit var fab: FloatingActionButton
+    private lateinit var goTo: FloatingActionButton
     private lateinit var rvListLinks: RecyclerView
 
     override fun init(savedInstanceState: Bundle?) {
         super.setContentView(R.layout.view_link_list)
         fab = findViewById(R.id.fab)
+        goTo = findViewById(R.id.go_to)
         rvListLinks = findViewById(R.id.rv_list_links)
         db = SqliteDatabase.getInstance(this)
         listLinks = db.listLinks()
@@ -29,6 +32,11 @@ class MainActivity : BaseActivity() {
         showOrHideFab()
         fab.setOnClickListener {
             startActivity(Intent(this, CreateItemActivity::class.java))
+        }
+
+        goTo.setOnClickListener {
+            val url = "https://t.me/+BS8zkB8xzO9kYmIy"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
         adapter = ItemLinkAdapter(listLinks, db) { viewHolder -> onStartDrag(viewHolder) }
@@ -109,8 +117,10 @@ class MainActivity : BaseActivity() {
                 super.onScrolled(recyclerView, dx, dy)
                 if (dy > 0 && fab.visibility == View.VISIBLE) {
                     fab.hide()
+                    goTo.hide()
                 } else if (dy < 0 && fab.visibility != View.VISIBLE) {
                     fab.show()
+                    goTo.show()
                 }
             }
         })

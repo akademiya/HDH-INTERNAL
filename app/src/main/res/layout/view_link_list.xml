@@ -26,6 +26,23 @@
             android:layout_height="match_parent"
             tools:listitem="@layout/item_link_card" />
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:orientation="vertical">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/go_to"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginHorizontal="@dimen/fab_margin"
+            android:importantForAccessibility="yes"
+            android:src="@drawable/hdh"
+            app:maxImageSize="50dp"
+            app:backgroundTint="@color/fab_color" />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
@@ -35,6 +52,7 @@
             android:importantForAccessibility="no"
             android:src="@drawable/ic_add"
             app:backgroundTint="@color/fab_color" />
+        </LinearLayout>
 
     </FrameLayout>
 </LinearLayout>
