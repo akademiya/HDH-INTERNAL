@@ -137,7 +137,7 @@ class ItemLinkAdapter (
                     set(Calendar.HOUR_OF_DAY, timeParts[0].toInt())
                     set(Calendar.MINUTE, timeParts[1].toInt())
                 } else {
-                    set(Calendar.HOUR_OF_DAY, 6) // Default to 06:00
+                    set(Calendar.HOUR_OF_DAY, 6) /** Default to 06:00 */
                     set(Calendar.MINUTE, 0)
                 }
                 set(Calendar.SECOND, 0)
@@ -151,7 +151,7 @@ class ItemLinkAdapter (
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                item.linkID + dayOfWeek, // Unique requestCode for each alarm
+                item.linkID + dayOfWeek,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )

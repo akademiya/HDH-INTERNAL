@@ -129,7 +129,7 @@ private fun verifyAndHandleLink(context: Context, item: ItemLinkEntity, isSoundM
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create the notification channel if on API 26+
+        /** Create the notification channel if on API 26+ */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 "LINK_NOTIFICATION_CHANNEL",
@@ -149,10 +149,6 @@ private fun verifyAndHandleLink(context: Context, item: ItemLinkEntity, isSoundM
         } else {
             Toast.makeText(context, "Notifications are disabled due to missing permission", Toast.LENGTH_LONG).show()
         }
-
-//        with(NotificationManagerCompat.from(context)) {
-//            notify(item.linkID, notification)
-//        }
 
         if (isSoundMessage) {
             MediaPlayer.create(context, R.raw.beep_alarm3).apply {
